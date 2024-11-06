@@ -2,6 +2,7 @@ import cv2
 import os
 from PIL import Image
 import numpy as np
+from PIL import ImageDraw
 
 def process_images():
     # 取得當前目錄中的所有圖片
@@ -11,14 +12,20 @@ def process_images():
         print("找不到圖片檔案")
         return
     
-    # 建立輸出資料夾
-    output_dir = 'processed_images'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # 建立兩個輸出資料夾
+    square_dir = 'square_images'
+    circle_dir = 'circle_images'
+    for directory in [square_dir, circle_dir]:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
     
     for img_file in image_files:
         # 使用OpenCV讀取圖片進行人臉偵測
         img_cv = cv2.imread(img_file)
+        if img_cv is None:
+            print(f"無法讀取圖片: {img_file}")
+            continue
+            
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
         
         # 載入人臉檢測器
@@ -42,8 +49,33 @@ def process_images():
             right = min(img_cv.shape[1], left + square_size)
             bottom = min(img_cv.shape[0], top + square_size)
             
+            # 確保裁切區域不會超出圖片範圍
+            width = right - left
+            height = bottom - top
+            size = min(width, height)
+            
+            # 重新調整裁切區域使其成為正方形
+            left = center_x - size//2
+            right = left + size
+            top = center_y - size//2
+            bottom = top + size
+            
+            # 確保邊界不會超出圖片範圍
+            if left < 0:
+                left = 0
+                right = size
+            if right > img_cv.shape[1]:
+                right = img_cv.shape[1]
+                left = right - size
+            if top < 0:
+                top = 0
+                bottom = size
+            if bottom > img_cv.shape[0]:
+                bottom = img_cv.shape[0]
+                top = bottom - size
+                
             # 裁切圖片
-            cropped = img_cv[top:bottom, left:right]
+            cropped = img_cv[int(top):int(bottom), int(left):int(right)]
             
             # 轉換回PIL格式並保存
             cropped_pil = Image.fromarray(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
@@ -52,10 +84,25 @@ def process_images():
             size = min(cropped_pil.size)
             output_size = (size, size)
             
-            # 調整大小並保存
+            # 調整大小並保存正方形版本
             cropped_pil = cropped_pil.resize(output_size, Image.Resampling.LANCZOS)
-            output_path = os.path.join(output_dir, os.path.splitext(img_file)[0] + '_processed.png')
-            cropped_pil.save(output_path, 'PNG')
+            square_path = os.path.join(square_dir, os.path.splitext(img_file)[0] + '_square.png')
+            cropped_pil.save(square_path, 'PNG')
+
+            # 創建圓形遮罩
+            mask = Image.new('L', output_size, 0)
+            mask_draw = ImageDraw.Draw(mask)
+            mask_draw.ellipse((0, 0, size-1, size-1), fill=255)
+
+            # 創建圓形版本
+            output = Image.new('RGBA', output_size, (0, 0, 0, 0))
+            output.paste(cropped_pil, (0, 0))
+            output.putalpha(mask)
+            
+            # 保存圓形版本
+            circle_path = os.path.join(circle_dir, os.path.splitext(img_file)[0] + '_circle.png')
+            output.save(circle_path, 'PNG')
+            
             print(f"已處理: {img_file}")
         else:
             print(f"在 {img_file} 中未偵測到人臉")
