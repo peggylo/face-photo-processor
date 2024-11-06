@@ -1,0 +1,21 @@
+# 輸出的圖片資料夾
+square_images/
+circle_images/
+processed_images/
+
+# 測試用的圖片檔案
+*.jpg
+*.jpeg
+*.png
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+
+# IDE
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
