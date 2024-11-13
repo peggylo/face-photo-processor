@@ -4,14 +4,14 @@ from PIL import Image
 import numpy as np
 
 def process_images():
-    # 取得當前目錄中的所有圖片
+    # 取得當前目錄中的所有圖片 測試
     image_files = [f for f in os.listdir('.') if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
     
     if not image_files:
         print("找不到圖片檔案")
         return
     
-    # 建立輸出資料夾
+    # 建立輸出資料夾 備註
     output_dir = 'processed_images'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
