@@ -1,0 +1,20 @@
+# 忽略所有圖片檔案
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.JPG
+*.JPEG
+*.PNG
+*.WEBP
+
+# 忽略裁切後的圖片資料夾
+cropped_speakers/
+
+# macOS system files
+.DS_Store
+
+# PowerPoint files
+*.ppt
+*.pptx
+*.pptm
